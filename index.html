@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>concept72 — Operations Radar</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-primary: #236192;
+    --blue-accent: #0082BA;
+    --green: #046A38;
+    --grey: #707372;
+    --grey-light: #f4f5f6;
+    --grey-mid: #e2e4e6;
+    --black: #1A1A1A;
+    --white: #ffffff;
+    --red-soft: #C0392B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #f0f2f5; color: var(--black); min-height: 100vh; }
+
+  .header {
+    background: var(--blue-primary);
+    padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 3px solid var(--blue-accent);
+  }
+  .wordmark { font-family: 'Montserrat', sans-serif; font-size: 22px; letter-spacing: -0.5px; }
+  .wordmark .c { color: var(--blue-accent); font-weight: 400; }
+  .wordmark .n { color: #cce6f4; font-weight: 700; }
+  .header-sub { font-family: 'Montserrat', sans-serif; font-size: 11px; color: rgba(255,255,255,0.55); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+  .header-right { text-align: right; }
+  .header-date { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); }
+  .sync-status { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 500; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; }
+  .sync-dot.syncing { background: #fbbf24; animation: pulse 0.8s infinite; }
+  .sync-dot.error { background: #f87171; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+  .doctrine {
+    background: var(--blue-primary); color: white;
+    padding: 12px 20px; border-left: 4px solid var(--green);
+    margin-bottom: 24px; border-radius: 0 4px 4px 0;
+  }
+  .doctrine p { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 2px; }
+  .doctrine strong { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: white; }
+
+  .deadline-warning { background: #fff8e0; border-left: 4px solid #e67e22; padding: 10px 16px; margin-bottom: 16px; font-size: 12px; font-weight: 600; color: #c0710a; font-family: 'Montserrat', sans-serif; display: none; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: white; border-top: 3px solid var(--blue-primary); padding: 14px 18px; border-radius: 2px; }
+  .stat-card.danger { border-top-color: var(--red-soft); }
+  .stat-card.success { border-top-color: var(--green); }
+  .stat-card.warning { border-top-color: #e67e22; }
+  .stat-number { font-family: 'Montserrat', sans-serif; font-size: 28px; font-weight: 800; color: var(--blue-primary); line-height: 1; }
+  .stat-card.danger .stat-number { color: var(--red-soft); }
+  .stat-card.success .stat-number { color: var(--green); }
+  .stat-card.warning .stat-number { color: #e67e22; }
+  .stat-label { font-size: 10px; font-weight: 600; color: var(--grey); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+
+  .add-panel { background: white; border: 1px solid var(--grey-mid); border-top: 3px solid var(--blue-accent); padding: 20px 24px; margin-bottom: 20px; border-radius: 2px; }
+  .add-panel h3 { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--blue-primary); margin-bottom: 14px; }
+  .add-form { display: grid; grid-template-columns: 1fr 160px 140px auto; gap: 10px; align-items: end; }
+  .form-group label { display: block; font-size: 10px; font-weight: 600; color: var(--grey); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+  .form-group input, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid var(--grey-mid); border-radius: 2px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--black); background: var(--grey-light); outline: none; transition: border-color 0.15s; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--blue-accent); background: white; }
+  .btn-add { background: var(--blue-primary); color: white; border: none; padding: 9px 20px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; border-radius: 2px; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+  .btn-add:hover { background: var(--blue-accent); }
+  .btn-add:disabled { background: var(--grey); cursor: not-allowed; }
+
+  .source-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 2px 7px; border-radius: 2px; background: #dde8f0; color: var(--blue-primary); }
+  .source-badge.text { background: #e8f4ff; color: #0082BA; }
+  .source-badge.call { background: #e8f0e8; color: #046A38; }
+  .source-badge.email { background: #f0e8f0; color: #5a3a7a; }
+  .source-badge.meeting { background: #fff0e0; color: #a05000; }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; margin-top: 8px; }
+  .section-title { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--blue-primary); display: flex; align-items: center; gap: 8px; }
+  .section-count { background: var(--blue-primary); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+
+  .task-table { width: 100%; background: white; border: 1px solid var(--grey-mid); border-radius: 2px; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+  .task-table thead tr { background: var(--blue-primary); }
+  .task-table thead th { padding: 10px 14px; text-align: left; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255,255,255,0.85); border-right: 1px solid rgba(255,255,255,0.1); }
+  .task-table tbody tr { border-bottom: 1px solid var(--grey-mid); transition: background 0.1s; }
+  .task-table tbody tr:hover { background: #f8f9fb; }
+  .task-table tbody tr.overdue { background: #fdf4f4; }
+  .task-table tbody tr.done-row { opacity: 0.6; }
+  .task-table td { padding: 10px 14px; vertical-align: middle; border-right: 1px solid var(--grey-mid); }
+  .task-table td:last-child { border-right: none; }
+
+  .task-id { font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 700; color: var(--grey); }
+  .task-desc { font-weight: 500; color: var(--black); line-height: 1.4; }
+  .task-desc.done-text { text-decoration: line-through; color: var(--grey); }
+
+  .priority-badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+  .priority-badge.high { background: #fde8e8; color: var(--red-soft); }
+  .priority-badge.med { background: #fff3e0; color: #c0710a; }
+  .priority-badge.low { background: #e8f4ff; color: var(--blue-primary); }
+
+  .status-select { padding: 5px 8px; border: 1px solid var(--grey-mid); border-radius: 2px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; outline: none; min-width: 130px; }
+  .status-select.active { color: var(--blue-primary); border-color: var(--blue-accent); }
+  .status-select.completed { color: var(--green); border-color: var(--green); background: #f0f8f4; }
+  .status-select.escalated { color: var(--red-soft); border-color: var(--red-soft); background: #fdf4f4; }
+  .status-select.inprogress { color: #c0710a; border-color: #e67e22; background: #fff8f0; }
+
+  .deadline-cell { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 600; color: var(--grey); white-space: nowrap; }
+  .escalation-input { width: 100%; padding: 5px 8px; border: 1px solid #f0c0c0; border-radius: 2px; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--red-soft); background: #fdf8f8; margin-top: 4px; outline: none; }
+
+  .btn-del { background: none; border: 1px solid var(--grey-mid); color: var(--grey); padding: 4px 8px; border-radius: 2px; cursor: pointer; font-size: 11px; transition: all 0.1s; }
+  .btn-del:hover { background: #fde8e8; border-color: var(--red-soft); color: var(--red-soft); }
+
+  .done-section { margin-bottom: 24px; }
+  .done-section .task-table thead tr { background: #4a6a4a; }
+
+  .sheets-link { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 600; color: var(--blue-accent); text-decoration: none; letter-spacing: 0.3px; }
+  .sheets-link:hover { text-decoration: underline; }
+
+  .footer { text-align: center; padding: 16px; font-size: 10px; color: var(--grey); font-weight: 500; letter-spacing: 0.5px; border-top: 1px solid var(--grey-mid); margin-top: 8px; }
+  .footer span { color: var(--blue-accent); }
+  .empty-state { text-align: center; padding: 28px 20px; color: var(--grey); font-size: 12px; font-weight: 500; }
+
+  .auth-banner { background: #fff8e0; border: 1px solid #e0c060; border-left: 4px solid #e67e22; padding: 14px 20px; margin-bottom: 20px; border-radius: 2px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .auth-banner p { font-size: 13px; color: #7a5000; font-weight: 500; }
+  .btn-auth { background: #4285F4; color: white; border: none; padding: 8px 18px; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; border-radius: 2px; cursor: pointer; white-space: nowrap; }
+  .btn-auth:hover { background: #3367d6; }
+
+  @media (max-width: 700px) {
+    .add-form { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .container { padding: 16px 12px; }
+    .header { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="wordmark"><span class="c">concept</span><span class="n">72</span></div>
+    <div class="header-sub">Operations Radar — Patrick D'Alesio</div>
+  </div>
+  <div class="header-right">
+    <div class="header-date" id="todayDate"></div>
+    <div class="sync-status">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncLabel">Initializing...</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="doctrine">
+    <p>Operating Doctrine</p>
+    <strong>Every task is either Completed or Escalated by 7:00 PM. If it is not on this list, it does not exist.</strong>
+  </div>
+
+  <div class="deadline-warning" id="deadlineWarning">
+    ⚠ It is past 7:00 PM. All open tasks must be marked Completed or Escalated with a documented reason.
+  </div>
+
+  <div class="auth-banner" id="authBanner" style="display:none">
+    <p>🔐 Sign in with Google to enable automatic sync to the concept72 Operations Sheet. Your tasks will be saved permanently and accessible to Steph at all times.</p>
+    <button class="btn-auth" id="authBtn">Sign in with Google</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-number" id="statTotal">0</div><div class="stat-label">Total Active Tasks</div></div>
+    <div class="stat-card danger"><div class="stat-number" id="statOverdue">0</div><div class="stat-label">Overdue / Escalated</div></div>
+    <div class="stat-card warning"><div class="stat-number" id="statInProgress">0</div><div class="stat-label">In Progress</div></div>
+    <div class="stat-card success"><div class="stat-number" id="statDone">0</div><div class="stat-label">Completed</div></div>
+  </div>
+
+  <div class="add-panel">
+    <h3>+ Add New Task</h3>
+    <div class="add-form">
+      <div class="form-group">
+        <label>Task Description</label>
+        <input type="text" id="newDesc" placeholder="e.g. Call vendor re: backorder on amps for Green project" />
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="newPriority">
+          <option value="high">🔴 High</option>
+          <option value="med" selected>🟡 Medium</option>
+          <option value="low">🔵 Low</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Source</label>
+        <select id="newSource">
+          <option value="text">Text Message</option>
+          <option value="call">Phone Call</option>
+          <option value="email">Email</option>
+          <option value="meeting">In-Person</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <button class="btn-add" id="addBtn" onclick="addTask()">Add Task</button>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <div class="section-title">Active Tasks <span class="section-count" id="activeCount">0</span></div>
+    <a class="sheets-link" href="https://docs.google.com/spreadsheets/d/17cTY28l3bRjYdbsFpj-zr4--rpr5blFqGQLFU3PTqlA/edit" target="_blank">↗ View in Google Sheets</a>
+  </div>
+
+  <table class="task-table">
+    <thead><tr>
+      <th style="width:42px">#</th>
+      <th>Task Description</th>
+      <th style="width:80px">Priority</th>
+      <th style="width:90px">Source</th>
+      <th style="width:160px">Status</th>
+      <th style="width:90px">Date Added</th>
+      <th style="width:50px"></th>
+    </tr></thead>
+    <tbody id="activeTbody"></tbody>
+  </table>
+
+  <div class="done-section">
+    <div class="section-header">
+      <div class="section-title" style="color:#4a6a4a">Completed <span class="section-count" style="background:#4a6a4a" id="doneCount">0</span></div>
+    </div>
+    <table class="task-table">
+      <thead><tr>
+        <th style="width:42px">#</th>
+        <th>Task Description</th>
+        <th style="width:80px">Priority</th>
+        <th style="width:90px">Source</th>
+        <th style="width:130px">Completed</th>
+        <th style="width:50px"></th>
+      </tr></thead>
+      <tbody id="doneTbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>concept</span><strong>72</strong> · Operations Radar · Synced to Google Sheets · Outdoor Lighting & Sound Crafted For Refined Ambience
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const SHEET_ID = '17cTY28l3bRjYdbsFpj-zr4--rpr5blFqGQLFU3PTqlA';
+const SHEET_NAME = 'Tasks';
+const CLIENT_ID = ''; // To be filled by Paddy after Google Cloud setup — see README
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const LOCAL_KEY = 'c72_ops_radar_v3';
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let tasks = [];
+let nextId = 1;
+let accessToken = null;
+let syncEnabled = false;
+
+// ─── LOCAL STORAGE ────────────────────────────────────────────────────────────
+function localLoad() {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      tasks = d.tasks || [];
+      nextId = d.nextId || (tasks.length + 1);
+    }
+  } catch(e) {}
+}
+
+function localSave() {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify({ tasks, nextId }));
+}
+
+// ─── SHEETS SYNC ─────────────────────────────────────────────────────────────
+function setSyncStatus(state, msg) {
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  dot.style.background = state === 'ok' ? '#4ade80' : state === 'syncing' ? '#fbbf24' : '#f87171';
+  label.textContent = msg;
+}
+
+async function sheetsRequest(method, path, body) {
+  if (!accessToken) return null;
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}${path}`, {
+    method,
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    // 400 with "Unable to parse range" usually means sheet tab doesn't exist yet
+    throw new Error(err.error?.message || res.status);
+  }
+  return res.json();
+}
+
+async function ensureSheetExists() {
+  // Get spreadsheet info
+  const info = await sheetsRequest('GET', '');
+  const sheets = info.sheets || [];
+  const exists = sheets.some(s => s.properties.title === SHEET_NAME);
+  if (!exists) {
+    await sheetsRequest('POST', ':batchUpdate', {
+      requests: [{
+        addSheet: {
+          properties: { title: SHEET_NAME }
+        }
+      }]
+    });
+    // Write header row
+    await sheetsRequest('PUT', `/values/${SHEET_NAME}!A1:I1?valueInputOption=RAW`, {
+      values: [['ID','Description','Priority','Source','Status','Escalation Note','Date Added','Completed Date','Last Updated']]
+    });
+  }
+}
+
+async function syncToSheets() {
+  if (!syncEnabled || !accessToken) return;
+  setSyncStatus('syncing', 'Syncing...');
+  try {
+    await ensureSheetExists();
+    // Clear existing data rows (keep header)
+    await sheetsRequest('POST', `/values/${SHEET_NAME}!A2:I1000:clear`, {});
+    if (tasks.length > 0) {
+      const rows = tasks.map(t => [
+        t.id, t.desc, t.priority, t.source, t.status,
+        t.escalationNote || '', t.dateAdded || '',
+        t.completedDate || '', new Date().toISOString()
+      ]);
+      await sheetsRequest('PUT', `/values/${SHEET_NAME}!A2?valueInputOption=RAW`, {
+        values: rows
+      });
+    }
+    setSyncStatus('ok', 'Synced · ' + new Date().toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'}));
+  } catch(e) {
+    setSyncStatus('error', 'Sync failed — saved locally');
+    console.error('Sheets sync error:', e);
+  }
+}
+
+async function loadFromSheets() {
+  if (!syncEnabled || !accessToken) return false;
+  try {
+    await ensureSheetExists();
+    const res = await sheetsRequest('GET', `/values/${SHEET_NAME}!A2:I1000`);
+    const rows = res.values || [];
+    if (rows.length === 0) return false;
+    tasks = rows.map(r => ({
+      id: parseInt(r[0]) || 0,
+      desc: r[1] || '',
+      priority: r[2] || 'med',
+      source: r[3] || 'other',
+      status: r[4] || 'active',
+      escalationNote: r[5] || '',
+      dateAdded: r[6] || '',
+      completedDate: r[7] || ''
+    }));
+    nextId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+    localSave();
+    return true;
+  } catch(e) {
+    console.error('Load from sheets error:', e);
+    return false;
+  }
+}
+
+// ─── GOOGLE AUTH ──────────────────────────────────────────────────────────────
+function initAuth() {
+  // Check if CLIENT_ID is configured
+  if (!CLIENT_ID) {
+    setSyncStatus('ok', 'Local only — see setup guide');
+    document.getElementById('authBanner').style.display = 'none';
+    return;
+  }
+  // Load GIS library
+  const script = document.createElement('script');
+  script.src = 'https://accounts.google.com/gsi/client';
+  script.onload = () => {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if (resp.access_token) {
+          accessToken = resp.access_token;
+          syncEnabled = true;
+          document.getElementById('authBanner').style.display = 'none';
+          setSyncStatus('syncing', 'Connecting...');
+          const loaded = await loadFromSheets();
+          if (!loaded) await syncToSheets();
+          render();
+        }
+      }
+    });
+    document.getElementById('authBtn').onclick = () => client.requestAccessToken();
+    document.getElementById('authBanner').style.display = 'flex';
+    setSyncStatus('error', 'Not signed in');
+  };
+  document.head.appendChild(script);
+}
+
+// ─── TASK LOGIC ───────────────────────────────────────────────────────────────
+function todayStr() {
+  return new Date().toLocaleDateString('en-CA');
+}
+
+function formatDate(str) {
+  if (!str) return '—';
+  const d = new Date(str + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function addTask() {
+  const desc = document.getElementById('newDesc').value.trim();
+  if (!desc) { document.getElementById('newDesc').focus(); return; }
+  tasks.push({
+    id: nextId++,
+    desc,
+    priority: document.getElementById('newPriority').value,
+    source: document.getElementById('newSource').value,
+    status: 'active',
+    dateAdded: todayStr(),
+    escalationNote: '',
+    completedDate: null
+  });
+  document.getElementById('newDesc').value = '';
+  localSave();
+  render();
+  syncToSheets();
+}
+
+function updateStatus(id, val) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.status = val;
+  if (val === 'completed') { t.completedDate = todayStr(); t.escalationNote = ''; }
+  else { t.completedDate = null; }
+  localSave();
+  render();
+  syncToSheets();
+}
+
+function updateEscalation(id, val) {
+  const t = tasks.find(x => x.id === id);
+  if (t) { t.escalationNote = val; localSave(); }
+  clearTimeout(window._escTimer);
+  window._escTimer = setTimeout(() => syncToSheets(), 1500);
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(x => x.id !== id);
+  localSave();
+  render();
+  syncToSheets();
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function sourceBadge(src) {
+  const map = { text:['text','TXT'], call:['call','CALL'], email:['email','EMAIL'], meeting:['meeting','MTG'], other:['','OTH'] };
+  const [cls, lbl] = map[src] || ['','?'];
+  return `<span class="source-badge ${cls}">${lbl}</span>`;
+}
+
+function priorityBadge(p) {
+  const map = { high:'High', med:'Med', low:'Low' };
+  return `<span class="priority-badge ${p}">${map[p]||p}</span>`;
+}
+
+function render() {
+  const active = tasks.filter(t => t.status !== 'completed');
+  const done = tasks.filter(t => t.status === 'completed');
+
+  document.getElementById('statTotal').textContent = active.length;
+  document.getElementById('statOverdue').textContent = active.filter(t => t.status === 'escalated').length;
+  document.getElementById('statInProgress').textContent = active.filter(t => t.status === 'inprogress').length;
+  document.getElementById('statDone').textContent = done.length;
+  document.getElementById('activeCount').textContent = active.length;
+  document.getElementById('doneCount').textContent = done.length;
+
+  const atbody = document.getElementById('activeTbody');
+  if (active.length === 0) {
+    atbody.innerHTML = `<tr><td colspan="7" class="empty-state">No active tasks. Add tasks above as they come in from Steph.</td></tr>`;
+  } else {
+    atbody.innerHTML = active.map(t => `
+      <tr class="${t.status==='escalated'?'overdue':''}">
+        <td class="task-id">${String(t.id).padStart(2,'0')}</td>
+        <td>
+          <div class="task-desc">${escHtml(t.desc)}</div>
+          ${t.status==='escalated' ? `<input class="escalation-input" placeholder="Required: bottleneck reason + new ETA..." value="${escHtml(t.escalationNote)}" oninput="updateEscalation(${t.id},this.value)" />` : ''}
+        </td>
+        <td>${priorityBadge(t.priority)}</td>
+        <td>${sourceBadge(t.source)}</td>
+        <td>
+          <select class="status-select ${t.status}" onchange="updateStatus(${t.id},this.value)">
+            <option value="active" ${t.status==='active'?'selected':''}>Active</option>
+            <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
+            <option value="escalated" ${t.status==='escalated'?'selected':''}>⚠ Escalated</option>
+            <option value="completed" ${t.status==='completed'?'selected':''}>✓ Completed</option>
+          </select>
+        </td>
+        <td class="deadline-cell">${formatDate(t.dateAdded)}</td>
+        <td><button class="btn-del" onclick="deleteTask(${t.id})">✕</button></td>
+      </tr>`).join('');
+  }
+
+  const dtbody = document.getElementById('doneTbody');
+  if (done.length === 0) {
+    dtbody.innerHTML = `<tr><td colspan="6" class="empty-state">No completed tasks yet.</td></tr>`;
+  } else {
+    dtbody.innerHTML = done.slice().reverse().map(t => `
+      <tr class="done-row">
+        <td class="task-id">${String(t.id).padStart(2,'0')}</td>
+        <td><div class="task-desc done-text">${escHtml(t.desc)}</div></td>
+        <td>${priorityBadge(t.priority)}</td>
+        <td>${sourceBadge(t.source)}</td>
+        <td class="deadline-cell" style="color:var(--green)">✓ ${formatDate(t.completedDate)}</td>
+        <td><button class="btn-del" onclick="deleteTask(${t.id})">✕</button></td>
+      </tr>`).join('');
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  localLoad();
+  render();
+
+  const now = new Date();
+  document.getElementById('todayDate').textContent = now.toLocaleDateString('en-US', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+  if (now.getHours() >= 19) document.getElementById('deadlineWarning').style.display = 'block';
+
+  document.getElementById('newDesc').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  initAuth();
+});
+</script>
+</body>
+</html>
